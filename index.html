@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>موقع حمزة الزاهي</title>
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(to right, #1e2a47, #4e5d7e);
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: background 0.5s ease-in-out;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 25px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        h1, h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 80%;
+            padding: 15px;
+            margin: 15px 0;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            text-align: right;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        button {
+            background: #ff9800;
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            margin-top: 10px;
+            cursor: pointer;
+            border-radius: 10px;
+            font-size: 18px;
+            transition: background 0.3s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            background: #e68900;
+        }
+
+        .error {
+            color: #ff3b3b;
+            margin-top: 10px;
+        }
+
+        .emoji {
+            font-size: 2.5rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="main-container">
+        <h1>مرحبًا بك في موقع <span style="color: #ff9800;">حمزة الزاهي</span> <span class="emoji">👋</span></h1>
+        <p>اضغط على الزر لبدء الإجابة على الأسئلة 📝</p>
+        <button onclick="startQuestions()">ابدأ</button>
+    </div>
+
+    <script>
+        const questions = [
+            "ماهو جدع مشترك الذي تدرس فيه؟",
+            "كم هو رقمك الترتيبي في القسم؟",
+            "كم هو عمرك؟",
+            "ماهو إسمك؟",
+            "هل أنت متفوق في دراستك؟",
+            "هل تحب مادة الرياضيات؟"
+        ];
+        let index = 0;
+        let answers = [];
+        
+        function startQuestions() {
+            const container = document.getElementById("main-container");
+            container.innerHTML = `
+
+                <h2 id="question">${questions[index]}</h2>
+                <input type="text" id="answer" placeholder="اكتب إجابتك هنا" onkeydown="handleKeyDown(event)">
+                <p id="errorMessage" class="error"></p>
+                <button onclick="nextQuestion()">التالي</button>
+            `;
+            document.getElementById("answer").focus();
+        }
+        
+        function handleKeyDown(event) {
+            if (event.key === "Enter") {
+                nextQuestion();
+            }
+        }
+        
+        function nextQuestion() {
+            let userAnswer = document.getElementById("answer").value.trim();
+            let errorMessage = document.getElementById("errorMessage");
+
+            if (userAnswer === "") {
+                errorMessage.textContent = "⚠️ خطأ: يجب ملء الخانة!";
+                return;
+            }
+            
+            answers.push(userAnswer);
+            
+            const container = document.getElementById("main-container");
+            container.innerHTML = `
+
+                <h2>جاري فحص إجابتك... <span class="emoji">⏳</span></h2>
+            `;
+            
+            setTimeout(() => {
+                if (index < questions.length - 1) {
+                    index++;
+                    startQuestions();
+                } else {
+                    submitAnswers();
+                }
+            }, 1000);
+        }
+        
+        function submitAnswers() {
+            const container = document.getElementById("main-container");
+            container.innerHTML = `
+                <h2>تم إرسال الإجابات بنجاح! <span class="emoji">✅</span></h2>
+                <p>انتظر، السيد حمزة الزاهي يرى أجوبتك! <span class="emoji">📩</span></p>
+                <h3>لا تنسى زيارة صفحتنا على إنستغرام <strong>hamza.__.zh</strong> <span class="emoji">📱</span></h3>
+            `;
+            
+            fetch('http://localhost:5500/save-answers', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(answers)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('الإجابات تم إرسالها بنجاح:', data);
+            })
+            .catch(error => {
+                console.error('خطأ في إرسال الإجابات:', error);
+            });
+        }
+    </script>
+</body>
+</html>
